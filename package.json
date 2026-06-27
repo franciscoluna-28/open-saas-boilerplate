@@ -6,20 +6,32 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push:dev": "npm run db:generate && npm run db:migrate",
+    "auth:generate": "echo 'WARNING: Do not modify the generated auth-schema.ts. Use extensions instead.' && npx @better-auth/cli generate --output src/_database/schema/auth-schema.ts -y"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
+    "better-auth": "^1.6.22",
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
     "next": "16.2.9",
+    "pg": "^8.22.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "pg-types": "^4.1.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
