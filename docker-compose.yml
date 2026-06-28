@@ -1,4 +1,16 @@
 services:
+  drizzle_gateway:
+    image: ghcr.io/drizzle-team/gateway:latest
+    container_name: app_drizzle_gateway
+    restart: unless-stopped
+    ports:
+      - "4983:4983"
+    environment:
+      PORT: "4983"
+      STORE_PATH: "/app/data"
+    volumes:
+      - drizzle_gateway_data:/app/data
+
   postgres:
     image: postgres:17-alpine
     container_name: app_postgres
@@ -39,3 +51,4 @@ services:
 volumes:
   pgdata:
   miniodata:
+  drizzle_gateway_data:

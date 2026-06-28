@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "pnpm infra:up && pnpm db:generate && pnpm db:migrate && pnpm dev:app",
+    "infra:up": "docker compose up -d --wait",
+    "db:migrate": "drizzle-kit migrate",
+    "dev:app": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push:dev": "npm run db:generate && npm run db:migrate",
+    "db:push:dev": "pnpm db:generate && pnpm db:migrate",
     "auth:generate": "echo 'WARNING: Do not modify the generated auth-schema.ts. Use extensions instead.' && npx @better-auth/cli generate --output src/_database/schema/auth-schema.ts -y"
   },
   "dependencies": {
