@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { signInAction, type AuthResult } from "@/_features/auth/server/actions";
@@ -35,8 +36,13 @@ export default function LoginPage() {
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input id="password" name="password" type="password" placeholder="Enter your password" required />
+              <PasswordInput id="password" name="password" placeholder="Enter your password" required />
             </Field>
+            <div className="flex justify-end -mt-2">
+              <Link href="/forgot-password" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending && <Spinner data-icon="inline-start" />}

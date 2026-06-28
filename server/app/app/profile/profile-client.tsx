@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -90,7 +91,7 @@ export function ProfileClient({ user }: ProfileClientProps) {
     .slice(0, 2);
 
   return (
-    <div className="mx-auto flex w-full !max-w-xl flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-xl! flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-sm text-muted-foreground">Manage your account settings.</p>
@@ -161,15 +162,15 @@ export function ProfileClient({ user }: ProfileClientProps) {
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="currentPassword">Current Password</FieldLabel>
-                <Input id="currentPassword" name="currentPassword" type="password" required />
+                <PasswordInput id="currentPassword" name="currentPassword" required />
               </Field>
               <Field>
                 <FieldLabel htmlFor="newPassword">New Password</FieldLabel>
-                <Input id="newPassword" name="newPassword" type="password" placeholder="At least 8 characters" required />
+                <PasswordInput id="newPassword" name="newPassword" placeholder="At least 8 characters" required />
               </Field>
               <Field>
                 <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-                <Input id="confirmPassword" name="confirmPassword" type="password" required />
+                <PasswordInput id="confirmPassword" name="confirmPassword" required />
               </Field>
               {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
               <Button type="submit" disabled={passwordPending}>
