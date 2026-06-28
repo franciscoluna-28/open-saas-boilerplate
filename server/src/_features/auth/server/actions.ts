@@ -8,6 +8,8 @@ import {
   signInSchema,
   changePasswordSchema,
   updateProfileSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "../auth.validation";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getS3Client, Bucket, ensureBucket } from "@/lib/s3";
@@ -171,5 +173,57 @@ export async function updateProfileAction(
     return ok({ name: parsed.data.name });
   } catch (e) {
     return err(e instanceof Error ? e.message : "Failed to update profile");
+  }
+}
+
+export async function forgotPasswordAction(
+  _prev: AuthResult | null,
+  formData: FormData,
+): Promise<AuthResult> {
+  const parsed = forgotPasswordSchema.safeParse({
+    email: formData.get("email"),
+  });
+
+  if (!parsed.success) return err(parsed.error.issues[0]!.message);
+
+  try {
+    const baseUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+    await auth.api.requestPasswordReset({
+      body: { email: parsed.data.email, redirectTo: `${baseUrl}/reset-password` },
+      headers: await headers(),
+    });
+    return ok(null);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to send reset email");
+  }
+}
+
+export async function resetPasswordAction(
+  _prev: AuthResult | null,
+  formData: FormData,
+): Promise<AuthResult> {
+  const parsed = resetPasswordSchema.safeParse({
+    token: formData.get("token"),
+    newPassword: formData.get("newPassword"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!parsed.success) return err(parsed.error.issues[0]!.message);
+
+  if (parsed.data.newPassword !== parsed.data.confirmPassword) {
+    return err("Passwords do not match");
+  }
+
+  try {
+    await auth.api.resetPassword({
+      body: {
+        newPassword: parsed.data.newPassword,
+        token: parsed.data.token,
+      },
+      headers: await headers(),
+    });
+    return ok(null);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to reset password");
   }
 }

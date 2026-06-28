@@ -32,6 +32,9 @@ export const env = {
   get S3_ACCESS_KEY_ID() {
     return process.env.S3_ACCESS_KEY_ID ?? process.env.AWS_ACCESS_KEY_ID;
   },
+  get RESEND_API_KEY() {
+    return assertEnv("RESEND_API_KEY");
+  },
   get S3_SECRET_ACCESS_KEY() {
     return process.env.S3_SECRET_ACCESS_KEY ?? process.env.AWS_SECRET_ACCESS_KEY;
   },
