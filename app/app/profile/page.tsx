@@ -1,10 +1,10 @@
 import { getSession } from "@/_features/auth/server/actions";
 import { redirect } from "next/navigation";
-import { InitClient } from "./init-client";
+import { ProfileClient } from "./profile-client";
 
-export default async function InitPage() {
+export default async function ProfilePage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  return <InitClient user={session.user} />;
+  return <ProfileClient user={session.user} />;
 }

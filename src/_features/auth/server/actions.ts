@@ -3,11 +3,19 @@
 import { auth } from "@/utils/auth";
 import { headers } from "next/headers";
 import { ok, err } from "@/utils/api";
-import { signUpSchema, signInSchema, changePasswordSchema } from "../auth.validation";
+import {
+  signUpSchema,
+  signInSchema,
+  changePasswordSchema,
+  updateProfileSchema,
+} from "../auth.validation";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getS3Client, Bucket, ensureBucket } from "@/lib/s3";
+import { revalidatePath } from "next/cache";
 
-export type AuthResult = ReturnType<typeof ok<unknown>> | ReturnType<typeof err>;
+export type AuthResult =
+  | ReturnType<typeof ok<unknown>>
+  | ReturnType<typeof err>;
 
 export async function getSession() {
   const response = await auth.api.getSession({ headers: await headers() });
@@ -79,6 +87,7 @@ export async function changePasswordAction(
       body: {
         currentPassword: parsed.data.currentPassword,
         newPassword: parsed.data.newPassword,
+        revokeOtherSessions: true,
       },
       headers: await headers(),
     });
@@ -133,8 +142,34 @@ export async function uploadAvatarAction(
       headers: await headers(),
     });
 
+    revalidatePath("/app/profile");
+
     return ok({ url });
   } catch (e) {
     return err(e instanceof Error ? e.message : "Failed to upload avatar");
+  }
+}
+
+export async function updateProfileAction(
+  _prev: AuthResult | null,
+  formData: FormData,
+): Promise<AuthResult> {
+  const parsed = updateProfileSchema.safeParse({
+    name: formData.get("name"),
+  });
+
+  if (!parsed.success) return err(parsed.error.issues[0]!.message);
+
+  try {
+    await auth.api.updateUser({
+      body: { name: parsed.data.name },
+      headers: await headers(),
+    });
+
+    revalidatePath("/app/profile");
+
+    return ok({ name: parsed.data.name });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to update profile");
   }
 }

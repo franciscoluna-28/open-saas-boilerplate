@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [state, formAction, isPending] = useActionState<AuthResult | null, FormData>(signInAction, null);
 
   useEffect(() => {
-    if (state?.success) router.push("/app/init");
+    if (state?.success) router.push("/app/profile");
   }, [state, router]);
 
   const error = (state && !state.success ? state.error : null) as string | null;

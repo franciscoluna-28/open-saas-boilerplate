@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -13,12 +13,13 @@ import { Separator } from "@/components/ui/separator";
 import {
   changePasswordAction,
   uploadAvatarAction,
+  updateProfileAction,
   signOutAction,
   type AuthResult,
 } from "@/_features/auth/server/actions";
 import { LogOutIcon, UploadIcon, UserIcon } from "lucide-react";
 
-interface InitClientProps {
+interface ProfileClientProps {
   user: {
     id: string;
     name: string;
@@ -27,9 +28,14 @@ interface InitClientProps {
   };
 }
 
-export function InitClient({ user }: InitClientProps) {
+export function ProfileClient({ user }: ProfileClientProps) {
   const router = useRouter();
+  const [name, setName] = useState(user.name);
   const [avatarUrl, setAvatarUrl] = useState<string | null | undefined>(user.image ?? null);
+  const [profileState, profileAction, profilePending] = useActionState<AuthResult | null, FormData>(
+    updateProfileAction,
+    null,
+  );
   const [passwordState, passwordAction, passwordPending] = useActionState<AuthResult | null, FormData>(
     changePasswordAction,
     null,
@@ -45,21 +51,38 @@ export function InitClient({ user }: InitClientProps) {
   };
 
   const avatarError = avatarState && !avatarState.success ? (avatarState.error as string | null) : null;
+  const profileError = profileState && !profileState.success ? (profileState.error as string | null) : null;
   const passwordError = passwordState && !passwordState.success ? (passwordState.error as string | null) : null;
 
-  if (avatarState?.success) {
-    const url = (avatarState.data as { url: string }).url;
-    if (url !== avatarUrl) {
+  const prevAvatarState = useRef(avatarState);
+  useEffect(() => {
+    if (avatarState?.success && prevAvatarState.current !== avatarState) {
+      const url = (avatarState.data as { url: string }).url;
       setAvatarUrl(url);
       toast.success("Avatar updated successfully");
     }
-  }
+    prevAvatarState.current = avatarState;
+  }, [avatarState]);
 
-  if (passwordState?.success) {
-    toast.success("Password changed successfully");
-  }
+  const prevProfileState = useRef(profileState);
+  useEffect(() => {
+    if (profileState?.success && prevProfileState.current !== profileState) {
+      const newName = (profileState.data as { name: string }).name;
+      setName(newName);
+      toast.success("Profile updated successfully");
+    }
+    prevProfileState.current = profileState;
+  }, [profileState]);
 
-  const initials = user.name
+  const prevPasswordState = useRef(passwordState);
+  useEffect(() => {
+    if (passwordState?.success && prevPasswordState.current !== passwordState) {
+      toast.success("Password changed successfully");
+    }
+    prevPasswordState.current = passwordState;
+  }, [passwordState]);
+
+  const initials = name
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -67,7 +90,7 @@ export function InitClient({ user }: InitClientProps) {
     .slice(0, 2);
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full !max-w-xl flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-sm text-muted-foreground">Manage your account settings.</p>
@@ -83,7 +106,7 @@ export function InitClient({ user }: InitClientProps) {
         <CardContent>
           <form action={avatarAction} className="flex items-end gap-4">
             <Avatar className="size-20">
-              <AvatarImage src={avatarUrl ?? undefined} alt={user.name} />
+              <AvatarImage src={avatarUrl ?? undefined} alt={name} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <FieldGroup>
@@ -96,6 +119,30 @@ export function InitClient({ user }: InitClientProps) {
                 {avatarPending && <Spinner data-icon="inline-start" />}
                 <UploadIcon data-icon={avatarPending ? undefined : "inline-start"} />
                 {avatarPending ? "Uploading..." : "Upload"}
+              </Button>
+            </FieldGroup>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Information</CardTitle>
+          <CardDescription>Update your display name.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={profileAction}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="name">Name</FieldLabel>
+                <Input id="name" name="name" defaultValue={name} required />
+              </Field>
+              {profileError && <p className="text-sm text-destructive">{profileError}</p>}
+              <Button type="submit" disabled={profilePending}>
+                {profilePending && <Spinner data-icon="inline-start" />}
+                {profilePending ? "Saving..." : "Save"}
               </Button>
             </FieldGroup>
           </form>
