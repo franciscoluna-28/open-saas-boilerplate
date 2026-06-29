@@ -1,65 +1,185 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Rocket,
+  ShieldCheck,
+  Database,
+  CloudUpload,
+  Mail,
+  Palette,
+  Container,
+  ArrowRight,
+  GitMerge,
+  Sparkles,
+  Gauge,
+  Puzzle,
+} from "lucide-react";
+
+const features = [
+  {
+    icon: ShieldCheck,
+    title: "Auth",
+    description: "Email/password, social login, 2FA, rate limiting, and session management with Better Auth.",
+  },
+  {
+    icon: Database,
+    title: "Database",
+    description: "Type-safe queries with Drizzle ORM, PostgreSQL, and auto-generated migrations out of the box.",
+  },
+  {
+    icon: CloudUpload,
+    title: "File Uploads",
+    description: "S3-compatible storage with MinIO in dev and any S3 provider in production. Signed URLs included.",
+  },
+  {
+    icon: Mail,
+    title: "Email",
+    description: "Transactional emails with Resend — password resets, welcome emails, and more, ready to go.",
+  },
+  {
+    icon: Palette,
+    title: "UI Kit",
+    description: "shadcn/ui components with dark mode, Tailwind CSS v4, and full theming via next-themes.",
+  },
+  {
+    icon: Container,
+    title: "Local Dev",
+    description: "PostgreSQL + MinIO via Docker Compose. One command to spin up everything you need.",
+  },
+];
+
+const perks = [
+  { icon: Gauge, text: "Production-ready from day one" },
+  { icon: Puzzle, text: "Modular architecture — use what you need" },
+  { icon: Sparkles, text: "Built by a founding engineer who's shipped SaaS" },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <div className="flex flex-col min-h-screen">
+      {/* Nav */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+          <div className="flex items-center gap-2 font-semibold">
+            <Rocket className="size-5 text-primary" />
+            <span>next-saas</span>
+          </div>
+          <nav className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/login">Sign In</Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link href="/register">Get Started</Link>
+            </Button>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+        <Badge variant="secondary" className="mb-4 gap-1.5">
+          <Sparkles className="size-3" />
+          SaaS Starter Template
+        </Badge>
+        <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+          Ship your SaaS faster.
+          <br />
+          <span className="text-muted-foreground">Without the boilerplate.</span>
+        </h1>
+        <p className="mt-4 max-w-xl text-lg text-muted-foreground">
+          A production-ready Next.js starter built by a founding engineer who&apos;s been through the
+          startup cycle. Auth, database, file uploads, emails — everything you need to launch.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Button size="lg" asChild>
+            <Link href="/register">
+              Start Building
+              <ArrowRight className="ml-1.5 size-4" />
+            </Link>
+          </Button>
+          <Button variant="outline" size="lg" asChild>
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href="https://github.com/your-org/next-saas"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              <GitMerge className="mr-1.5 size-4" />
+              GitHub
+            </a>
+          </Button>
+        </div>
+
+        {/* Perks */}
+        <div className="mt-12 flex flex-wrap justify-center gap-x-8 gap-y-3">
+          {perks.map((perk) => (
+            <div key={perk.text} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <perk.icon className="size-4 text-primary" />
+              {perk.text}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="border-t px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight">Everything you need to ship</h2>
+            <p className="mt-2 text-muted-foreground">
+              No more wiring up auth, storage, and databases from scratch.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => (
+              <div
+                key={feature.title}
+                className="group rounded-xl border bg-card p-6 transition-colors hover:bg-muted/50"
+              >
+                <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <feature.icon className="size-5" />
+                </div>
+                <h3 className="mb-1.5 font-semibold">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-t px-4 py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <Badge className="mb-4 gap-1.5" variant="secondary">
+            <Rocket className="size-3" />
+            Get started in minutes
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight">Ready to launch?</h2>
+          <p className="mt-2 text-muted-foreground">
+            Clone the repo, run one command, and you&apos;ve got a fully functional SaaS app with
+            auth, database, and file uploads.
           </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Button size="lg" asChild>
+              <Link href="/register">
+                Create your account
+                <ArrowRight className="ml-1.5 size-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t px-4 py-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between text-sm text-muted-foreground">
+          <span>next-saas</span>
+          <span>Built by a founding engineer for founders.</span>
         </div>
-      </main>
+      </footer>
     </div>
   );
 }

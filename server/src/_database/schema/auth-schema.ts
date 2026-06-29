@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { todo } from "./app-schema";
 
-export const userRoles = ["user", "admin"] as const;
+export const userRoles = ["user", "admin", "superadmin"] as const;
 export const userRolesEnum = pgEnum("user_roles", userRoles);
 
 export const user = pgTable(

@@ -42,3 +42,9 @@ export const resetPasswordSchema = z.object({
 });
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const claimAdminSchema = z.object({
+  adminToken: z.string().min(1, "Admin token is required"),
+});
+
+export type ClaimAdminInput = z.infer<typeof claimAdminSchema>;

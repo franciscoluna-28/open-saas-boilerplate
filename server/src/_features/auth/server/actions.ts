@@ -10,10 +10,14 @@ import {
   updateProfileSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  claimAdminSchema,
 } from "../auth.validation";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getS3Client, Bucket, ensureBucket } from "@/lib/s3";
 import { revalidatePath } from "next/cache";
+import { user } from "@/_database/schema/auth-schema";
+import { db } from "@/_database/drizzle";
+import { eq } from "drizzle-orm";
 
 export type AuthResult =
   | ReturnType<typeof ok<unknown>>
@@ -225,5 +229,55 @@ export async function resetPasswordAction(
     return ok(null);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Failed to reset password");
+  }
+}
+
+export async function hasAdminTokenConfigured() {
+  return !!process.env.INITIAL_SUPERADMIN_TOKEN;
+}
+
+export async function claimAdminAction(
+  _prev: AuthResult | null,
+  formData: FormData,
+): Promise<AuthResult> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return err("You must be signed in");
+
+  const parsed = claimAdminSchema.safeParse({
+    adminToken: formData.get("adminToken"),
+  });
+
+  if (!parsed.success) return err(parsed.error.issues[0]!.message);
+
+  const token = process.env.INITIAL_SUPERADMIN_TOKEN;
+  if (!token) return err("No admin token configured on this instance");
+
+  if (parsed.data.adminToken !== token) return err("Invalid admin token");
+
+  const existingSuperadmin = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.role, "superadmin"))
+    .limit(1);
+
+  if (existingSuperadmin.length > 0) return err("Superadmin already exists — this token has been invalidated");
+
+  try {
+    await db
+      .update(user)
+      .set({ role: "superadmin" })
+      .where(eq(user.id, session.user.id));
+
+    console.warn(
+      "[CLAIM_ADMIN] INITIAL_SUPERADMIN_TOKEN was consumed by user %s (%s). Remove it from your environment variables.",
+      session.user.id,
+      session.user.email,
+    );
+
+    revalidatePath("/app/profile");
+
+    return ok(null);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to claim admin");
   }
 }
