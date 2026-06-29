@@ -12,3 +12,9 @@ export const requireAdmin = async () => {
   if (session.user.role !== "admin") redirect("/app/dashboard");
   return session;
 };
+
+export const requireSuperAdmin = async () => {
+  const session = await requireAuth();
+  if (session.user.role !== "superadmin") redirect("/app/profile");
+  return session;
+};

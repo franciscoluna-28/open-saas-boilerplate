@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
@@ -11,13 +11,18 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { signUpAction, type AuthResult } from "@/_features/auth/server/actions";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("inviteToken");
+
   const [state, formAction, isPending] = useActionState<AuthResult | null, FormData>(signUpAction, null);
 
   useEffect(() => {
-    if (state?.success) router.push("/app/profile");
-  }, [state, router]);
+    if (state?.success) {
+      router.push(inviteToken ? `/accept-invite?token=${inviteToken}` : "/app/profile");
+    }
+  }, [state, router, inviteToken]);
 
   const error = (state && !state.success ? state.error : null) as string | null;
 
@@ -59,5 +64,13 @@ export default function RegisterPage() {
         </p>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }
