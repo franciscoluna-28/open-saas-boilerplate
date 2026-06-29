@@ -8,8 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { claimAdminAction, type AuthResult } from "@/_features/auth/server/actions";
-import { KeyIcon } from "lucide-react";
-
 export default function ClaimAdminPage() {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState<AuthResult | null, FormData>(claimAdminAction, null);
@@ -24,9 +22,6 @@ export default function ClaimAdminPage() {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <KeyIcon className="size-5" />
-          </div>
           <div>
             <CardTitle>Claim Superadmin</CardTitle>
             <CardDescription>

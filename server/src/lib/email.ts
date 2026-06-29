@@ -37,7 +37,7 @@ export async function sendPasswordResetEmail({
     `,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(typeof error === "string" ? error : error.message ?? JSON.stringify(error));
 }
 
 export async function sendAdminInviteEmail({
@@ -67,5 +67,5 @@ export async function sendAdminInviteEmail({
     `,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(typeof error === "string" ? error : error.message ?? JSON.stringify(error));
 }

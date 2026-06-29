@@ -9,14 +9,15 @@ import { db } from "@/_database/drizzle";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { sendAdminInviteEmail } from "@/lib/email";
+import { getUsers } from "./queries";
+import type { UserItem } from "./queries";
 
 export type AdminResult =
   | ReturnType<typeof ok<unknown>>
   | ReturnType<typeof err>;
 
 const ALLOWED_ROLES: Record<string, readonly string[]> = {
-  superadmin: ["superadmin", "admin", "user"],
-  admin: ["user"],
+  superadmin: ["superadmin", "admin"],
 };
 
 export async function inviteAdminAction(
@@ -25,7 +26,7 @@ export async function inviteAdminAction(
 ): Promise<AdminResult> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return err("Not authenticated");
-  if (session.user.role !== "superadmin" && session.user.role !== "admin") return err("Only admins can send invites");
+  if (session.user.role !== "superadmin") return err("Only superadmins can send invites");
 
   const parsed = inviteSchema.safeParse({
     email: formData.get("email"),
@@ -81,13 +82,17 @@ export async function inviteAdminAction(
     const baseUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
     const inviteUrl = `${baseUrl}/accept-invite?token=${token}`;
 
-    await sendAdminInviteEmail({ email: parsed.data.email, url: inviteUrl });
+    try {
+      await sendAdminInviteEmail({ email: parsed.data.email, url: inviteUrl });
+    } catch {
+      console.log(`[INVITE] Email not sent. Invite link: ${inviteUrl}`);
+    }
 
-    revalidatePath("/app/admin/users/invite");
+    revalidatePath("/app/admin");
 
     return ok({ email: parsed.data.email, role: parsed.data.role });
   } catch (e) {
-    return err(e instanceof Error ? e.message : "Failed to send invite");
+    return err(`Failed to send invite: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 
@@ -192,10 +197,29 @@ export async function revokeInviteAction(
       .set({ expiresAt: new Date(0) })
       .where(eq(invitation.id, inviteId));
 
-    revalidatePath("/app/admin/users/invite");
+    revalidatePath("/app/admin");
 
     return ok(null);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Failed to revoke invite");
+  }
+}
+
+export async function getUsersAction(
+  cursor?: string,
+  limit = 25,
+): Promise<
+  | { success: true; data: { users: UserItem[]; nextCursor: string | null } }
+  | ReturnType<typeof err>
+> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return err("Not authenticated");
+  if (session.user.role !== "superadmin" && session.user.role !== "admin") return err("Only admins can view users");
+
+  try {
+    const result = await getUsers(cursor, limit);
+    return { success: true, data: result };
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to fetch users");
   }
 }

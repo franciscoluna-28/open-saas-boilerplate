@@ -8,6 +8,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { acceptInviteAction, type AdminResult } from "@/_features/admin/server/actions";
+import { signOutAction } from "@/_features/auth/server/actions";
 import { ShieldCheckIcon, UserIcon } from "lucide-react";
 
 function AcceptInviteForm() {
@@ -26,6 +27,12 @@ function AcceptInviteForm() {
 
   const error = state && !state.success ? (state.error as string) : null;
   const success = state?.success ?? false;
+  const isEmailMismatch = error === "This invitation was sent to a different email address";
+
+  const handleLogout = async () => {
+    await signOutAction();
+    router.push(`/login?callback=/accept-invite?token=${token}`);
+  };
 
   if (!token) {
     return (
@@ -80,7 +87,21 @@ function AcceptInviteForm() {
             <form action={formAction}>
               <FieldGroup>
                 <input type="hidden" name="token" value={token} />
-                {error && <p className="text-sm text-destructive">{error}</p>}
+                {error && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-destructive">{error}</p>
+                    {isEmailMismatch && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleLogout}
+                      >
+                        Log out & sign in with a different account
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <Button type="submit" className="w-full" disabled={isPending}>
                   {isPending && <Spinner data-icon="inline-start" />}
                   {isPending ? "Accepting..." : "Accept & Become Admin"}
