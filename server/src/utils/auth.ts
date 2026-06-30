@@ -26,6 +26,17 @@ export const auth = betterAuth({
         defaultValue: "user",
         input: false,
       },
+      banned: {
+        type: "boolean",
+        required: true,
+        defaultValue: false,
+        input: false,
+      },
+      bannedAt: {
+        type: "date",
+        required: false,
+        input: false,
+      },
     },
   },
   session: {

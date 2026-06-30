@@ -17,7 +17,7 @@ export type AdminResult =
   | ReturnType<typeof err>;
 
 const ALLOWED_ROLES: Record<string, readonly string[]> = {
-  superadmin: ["superadmin", "admin"],
+  superadmin: ["superadmin", "admin", "user"],
 };
 
 export async function inviteAdminAction(
@@ -221,5 +221,97 @@ export async function getUsersAction(
     return { success: true, data: result };
   } catch (e) {
     return err(e instanceof Error ? e.message : "Failed to fetch users");
+  }
+}
+
+export async function banUserAction(
+  _prev: AdminResult | null,
+  formData: FormData,
+): Promise<AdminResult> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return err("Not authenticated");
+  if (session.user.role !== "admin" && session.user.role !== "superadmin") return err("Only admins can ban users");
+
+  const userId = formData.get("userId");
+  if (typeof userId !== "string" || !userId) return err("User ID is required");
+  if (userId === session.user.id) return err("You cannot ban yourself");
+
+  try {
+    const target = await db
+      .select({ role: user.role })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+
+    if (target.length === 0) return err("User not found");
+    if (target[0]!.role === "admin" || target[0]!.role === "superadmin") {
+      return err("Cannot ban admins or superadmins");
+    }
+
+    await db
+      .update(user)
+      .set({ banned: true, bannedAt: new Date() })
+      .where(eq(user.id, userId));
+
+    revalidatePath("/app/admin");
+    return ok(null);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to ban user");
+  }
+}
+
+export async function unbanUserAction(
+  _prev: AdminResult | null,
+  formData: FormData,
+): Promise<AdminResult> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return err("Not authenticated");
+  if (session.user.role !== "admin" && session.user.role !== "superadmin") return err("Only admins can unban users");
+
+  const userId = formData.get("userId");
+  if (typeof userId !== "string" || !userId) return err("User ID is required");
+
+  try {
+    await db
+      .update(user)
+      .set({ banned: false, bannedAt: null })
+      .where(eq(user.id, userId));
+
+    revalidatePath("/app/admin");
+    return ok(null);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to unban user");
+  }
+}
+
+export async function changeUserRoleAction(
+  _prev: AdminResult | null,
+  formData: FormData,
+): Promise<AdminResult> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return err("Not authenticated");
+  if (session.user.role !== "superadmin") return err("Only superadmins can change roles");
+
+  const userId = formData.get("userId");
+  const newRole = formData.get("role");
+  if (typeof userId !== "string" || !userId) return err("User ID is required");
+  if (typeof newRole !== "string" || !newRole) return err("Role is required");
+  if (userId === session.user.id) return err("You cannot change your own role");
+
+  const allowed = ALLOWED_ROLES[session.user.role];
+  if (!allowed!.includes(newRole)) {
+    return err(`You cannot assign the role "${newRole}"`);
+  }
+
+  try {
+    await db
+      .update(user)
+      .set({ role: newRole as "user" | "admin" | "superadmin" })
+      .where(eq(user.id, userId));
+
+    revalidatePath("/app/admin");
+    return ok(null);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Failed to change role");
   }
 }

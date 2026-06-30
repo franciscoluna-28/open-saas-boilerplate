@@ -10,6 +10,8 @@ export type UserItem = {
   createdAt: Date;
   emailVerified: boolean | null;
   image: string | null;
+  banned: boolean;
+  bannedAt: Date | null;
 };
 
 export type InviteItem = {
@@ -60,6 +62,8 @@ export async function getUsers(cursor?: string, limit = 25): Promise<GetUsersRes
       createdAt: user.createdAt,
       emailVerified: user.emailVerified,
       image: user.image,
+      banned: user.banned,
+      bannedAt: user.bannedAt,
     })
     .from(user)
     .where(whereClause)

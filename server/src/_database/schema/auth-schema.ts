@@ -7,8 +7,7 @@ import {
   index,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { todo } from "./app-schema";
-
+import { post } from "./app-schema";
 export const userRoles = ["user", "admin", "superadmin"] as const;
 export const userRolesEnum = pgEnum("user_roles", userRoles);
 
@@ -21,6 +20,8 @@ export const user = pgTable(
     emailVerified: boolean("email_verified").default(false).notNull(),
     image: text("image"),
     role: userRolesEnum("role").default("user").notNull(),
+    banned: boolean("banned").default(false).notNull(),
+    bannedAt: timestamp("banned_at", { withTimezone: true }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -110,8 +111,9 @@ export const verification = pgTable("verification", {
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
-  todos: many(todo),
   invitations: many(invitation),
+  posts: many(post, { relationName: "author" }),
+  deletedPosts: many(post, { relationName: "deletedBy" }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
