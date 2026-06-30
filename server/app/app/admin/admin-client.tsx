@@ -37,11 +37,16 @@ import {
   ClockIcon,
   ShieldIcon,
   PlusIcon,
+  BanIcon,
+  CheckCircleIcon,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
   inviteAdminAction,
   revokeInviteAction,
+  banUserAction,
+  unbanUserAction,
+  changeUserRoleAction,
   getUsersAction,
   type AdminResult,
 } from "@/_features/admin/server/actions";
@@ -74,6 +79,31 @@ function RoleSelect() {
         <input type="hidden" name="role" value={value} />
       </div>
     </Field>
+  );
+}
+
+function UserRoleSelect({ defaultValue, onRoleChange }: { defaultValue: string; onRoleChange: (role: string) => void }) {
+  const [value, setValue] = useState(defaultValue);
+
+  const handleChange = (newValue: string) => {
+    setValue(newValue);
+    onRoleChange(newValue);
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <Select value={value} onValueChange={handleChange}>
+        <SelectTrigger className="h-7 w-28 text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="superadmin">Superadmin</SelectItem>
+          <SelectItem value="admin">Admin</SelectItem>
+          <SelectItem value="user">User</SelectItem>
+        </SelectContent>
+      </Select>
+      <input type="hidden" name="role" value={value} />
+    </div>
   );
 }
 
@@ -158,8 +188,35 @@ export function AdminClient({
     setLoading(false);
   }, [nextCursor, loading]);
 
+  const handleBanChange = async (userId: string, currentlyBanned: boolean) => {
+    const formData = new FormData();
+    formData.set("userId", userId);
+    const action = currentlyBanned ? unbanUserAction : banUserAction;
+    const result = await action(null, formData);
+    if (result.success) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? { ...u, banned: !currentlyBanned, bannedAt: currentlyBanned ? null : new Date() }
+            : u,
+        ),
+      );
+    }
+  };
+
+  const handleRoleChange = async (userId: string, formData: FormData) => {
+    formData.set("userId", userId);
+    const result = await changeUserRoleAction(null, formData);
+    if (result.success) {
+      const newRole = formData.get("role") as string;
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+      );
+    }
+  };
+
   return (
-    <div className="mx-auto flex w-full max-w-4xl! flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-5xl! flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Admin Panel</h1>
@@ -192,7 +249,9 @@ export function AdminClient({
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -201,20 +260,64 @@ export function AdminClient({
                   <TableCell className="font-medium">{u.name}</TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        u.role === "superadmin"
-                          ? "destructive"
-                          : u.role === "admin"
-                            ? "secondary"
-                            : "outline"
-                      }
-                    >
-                      {u.role === "superadmin" ? "Superadmin" : u.role === "admin" ? "Admin" : "User"}
-                    </Badge>
+                    {isSuperadmin ? (
+                      <form id={`role-form-${u.id}`} action={handleRoleChange.bind(null, u.id)}>
+                        <UserRoleSelect
+                          defaultValue={u.role}
+                          onRoleChange={() => {
+                            setTimeout(() => {
+                              (document.getElementById(`role-form-${u.id}`) as HTMLFormElement)?.requestSubmit();
+                            }, 0);
+                          }}
+                        />
+                      </form>
+                    ) : (
+                      <Badge
+                        variant={
+                          u.role === "superadmin"
+                            ? "destructive"
+                            : u.role === "admin"
+                              ? "secondary"
+                              : "outline"
+                        }
+                      >
+                        {u.role === "superadmin" ? "Superadmin" : u.role === "admin" ? "Admin" : "User"}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {u.banned ? (
+                      <Badge variant="destructive" className="text-xs">Banned</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs text-muted-foreground">Active</Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {formatDistanceToNow(new Date(u.createdAt), { addSuffix: true })}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {u.role !== "admin" && u.role !== "superadmin" && (
+                        <form
+                          action={async () => {
+                            await handleBanChange(u.id, u.banned);
+                          }}
+                        >
+                          <Button
+                            type="submit"
+                            variant="ghost"
+                            size="xs"
+                            className={u.banned ? "text-green-600 hover:text-green-600" : "text-destructive hover:text-destructive"}
+                          >
+                            {u.banned ? (
+                              <><CheckCircleIcon className="size-3" /> Unban</>
+                            ) : (
+                              <><BanIcon className="size-3" /> Ban</>
+                            )}
+                          </Button>
+                        </form>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
