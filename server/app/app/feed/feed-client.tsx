@@ -141,11 +141,10 @@ export function FeedClient({
 
   return (
     <div className="mx-auto w-full max-w-2xl!">
-      <div className="flex items-center justify-between border-b px-4 py-3">
+      <div className="flex items-center justify-between px-4 py-6">
         <h1 className="text-xl font-bold">Feed</h1>
         <Button onClick={() => setComposerOpen(true)} size="sm" className="rounded-full">
-          <FeatherIcon className="size-4" />
-          <span className="hidden sm:inline">Post</span>
+          Create Post <FeatherIcon className="size-4 ml-2" />
         </Button>
       </div>
 
@@ -190,7 +189,7 @@ export function FeedClient({
         </div>
       )}
 
-      <div className="flex flex-col gap-3 px-4 py-4">
+      <div className="grid grid-cols-3 gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-1">
         {posts.map((post) => (
           <Card key={post.id} className="group">
             <CardContent className="p-4">
